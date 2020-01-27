@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 from roipoly import RoiPoly
+from roipoly import MultiRoi
 import cv2
 import os
 from compute_batch_grad_descent import grad_descent
@@ -89,10 +90,14 @@ def grab_image_segment(num_img = 5):
         fig = plt.figure(1)
         plt.imshow(img)
         plt.show(block = False)
-        roi = RoiPoly(color='red',fig=fig)
+        #roi = RoiPoly(color='red',fig=fig)
+        roi = MultiRoi(fig=fig)
         #plt.imshow(roi.get_mask(img))#,interpolation='nearest',cmap='Greys')
         img_grey = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        mask = roi.get_mask(img_grey)
+        mask = None
+        for msk in roi.rois.keys():
+            mask = roi.rois[msk].get_mask(img_grey) if mask is None else np.logical_or(mask,roi.rois[msk].get_mask(img_grey))
+        #mask = roi.get_mask(img_grey)
         mask_np = 1*mask
         mask_complement = np.logical_not(mask_np)
         #img_masked = np.zeros(img.shape)
@@ -119,8 +124,8 @@ def grab_image_segment(num_img = 5):
         #img_comp_masked[:,:,1] =  img[:,:,1] * mask_complement
         #img_comp_masked[:,:,2] =  img[:,:,2] * mask_complement
 
-        #plt.imshow(mask_np,cmap='gray')
-        #plt.show()
+        plt.imshow(mask_np,cmap='gray')
+        plt.show()
 
         red_ftr = np.zeros((mask_cntr,10))
         for data in range(mask_cntr):
@@ -226,7 +231,7 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
 
 if __name__ == '__main__':
     #py_test()
-    #grab_image_segment(6)
+    grab_image_segment(6)
     train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(4,1,1)
     grad_descent(1e-6, train_data, train_label, cv_data, cv_label, test_data, test_label, M = 50)
 
