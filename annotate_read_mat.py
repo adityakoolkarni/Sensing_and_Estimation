@@ -141,7 +141,7 @@ def grab_image_segment(num_img = 5):
             red_ftr[data,9] = img_masked[data,2]                         
 
         non_red_ftr = np.zeros((mask_complement_cntr,10))
-        for data in range(mask_cntr):
+        for data in range(mask_complement_cntr):
             non_red_ftr[data,0] = 1
             non_red_ftr[data,1] = img_comp_masked[data,0] ** 2                   
             non_red_ftr[data,2] = img_comp_masked[data,1] ** 2
@@ -193,6 +193,14 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
             print('Hey no problem')
             train_label = np.ones((data_temp.shape[0],1)) if train_label is None else np.vstack((train_label, np.ones((data_temp.shape[0],1))))
 
+    #shffl_sctch_pd = np.hstack((train_data,train_label))
+    #np.random.shuffle(shffl_sctch_pd) 
+
+    #train_data = shffl_sctch_pd[:,0:-1].reshape(train_data.shape)
+    #train_label = shffl_sctch_pd[:,-1].reshape(train_label.shape)
+
+    #del shffl_sctch_pd
+
 
     cv_data = None
     cv_label = None
@@ -204,23 +212,64 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
         else:
             cv_label = np.ones((data_temp.shape[0],1)) if cv_label is None else np.vstack((cv_label, np.ones((data_temp.shape[0],1))))
 
+    #shffl_sctch_pd = np.hstack((cv_data,cv_label))
+    #np.random.shuffle(shffl_sctch_pd) 
+
+    #cv_data = shffl_sctch_pd[:,0:-1].reshape(cv_data)
+    #cv_label = shffl_sctch_pd[:,-1].reshape(cv_label)
+
+    #del shffl_sctch_pd
+    ###############################  Old Testing Logic ######################################
     test_date = None
     test_label = None
-    for image in range(num_cv_img + num_train_img,num_cv_img + num_train_img + num_test_img):
-        data_temp = np.load(mask_path_list[image]) / 255
-        test_date = data_temp if test_date is None else np.vstack((test_date,data_temp)) 
-        if 'comple' in mask_path_list[image]:
-            test_label = np.zeros((data_temp.shape[0],1)) if test_label is None else np.vstack((test_label, np.zeros((data_temp.shape[0],1))))
-        else:
-            print("ALL RED")
-            test_label = np.ones((data_temp.shape[0],1)) if test_label is None else np.vstack((test_label, np.ones((data_temp.shape[0],1))))
+    #for image in range(num_cv_img + num_train_img,num_cv_img + num_train_img + num_test_img):
+    #    data_temp = np.load(mask_path_list[image]) / 255
+    #    test_date = data_temp if test_date is None else np.vstack((test_date,data_temp)) 
+    #    if 'comple' in mask_path_list[image]:
+    #        test_label = np.zeros((data_temp.shape[0],1)) if test_label is None else np.vstack((test_label, np.zeros((data_temp.shape[0],1))))
+    #    else:
+    #        print("ALL RED")
+    #        test_label = np.ones((data_temp.shape[0],1)) if test_label is None else np.vstack((test_label, np.ones((data_temp.shape[0],1))))
+
+    #plt.imshow(test_img)
+    #plt.show()
+    #shffl_sctch_pd = np.hstack((test_data,test_label))
+    #np.random.shuffle(shffl_sctch_pd) 
+
+    #test_data = shffl_sctch_pd[:,0:-1].reshape(test_data.shape)
+    #test_label = shffl_sctch_pd[:,-1].reshape(test_label.shape)
+
+    #del shffl_sctch_pd
 
 
+    ################################ New Testing ##############################
+    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/17.jpg' 
+    test_img = mpimg.imread(path)
+    test_ftr = np.zeros((test_img.shape[0] * test_img.shape[1],10))
+    print("#######TEST IMAGE SHAPE",test_img.shape)
+    test_ftr_cntr = 0
+    for i in range(test_img.shape[0]):
+        for j in range(test_img.shape[1]):
+            test_ftr[test_ftr_cntr,0] = 1
+            test_ftr[test_ftr_cntr,1] = test_img[i,j,0] ** 2                   
+            test_ftr[test_ftr_cntr,2] = test_img[i,j,1] ** 2
+            test_ftr[test_ftr_cntr,3] = test_img[i,j,2] ** 2
+            test_ftr[test_ftr_cntr,4] = test_img[i,j,0] *  test_img[i,j,2] 
+            test_ftr[test_ftr_cntr,5] = test_img[i,j,1] *  test_img[i,j,2] 
+            test_ftr[test_ftr_cntr,6] = test_img[i,j,1] *  test_img[i,j,0] 
+            test_ftr[test_ftr_cntr,7] = test_img[i,j,0]                         
+            test_ftr[test_ftr_cntr,8] = test_img[i,j,1]                         
+            test_ftr[test_ftr_cntr,9] = test_img[i,j,2]                         
+            test_ftr_cntr += 1
+
+
+    #plt.imshow(test_img)
+    #plt.show()
 
     assert train_data.shape[0] == train_label.shape[0]
     assert cv_data.shape[0] == cv_label.shape[0]
-    assert test_date.shape[0] == test_label.shape[0]
-    return train_data, train_label, cv_data, cv_label, test_date, test_label
+    #assert test_date.shape[0] == test_label.shape[0]
+    return train_data, train_label, cv_data, cv_label, test_ftr / 70000, test_label
 
     #for image in range(num_img):
     #    mask = np.load(mask_path_list[image]) / 255
@@ -231,7 +280,7 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
 
 if __name__ == '__main__':
     #py_test()
-    grab_image_segment(6)
-    train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(4,1,1)
-    grad_descent(1e-6, train_data, train_label, cv_data, cv_label, test_data, test_label, M = 50)
+    #grab_image_segment(10)
+    train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(8,2,1)
+    grad_descent(1e-6, train_data, train_label, cv_data, cv_label, test_data, test_label, M = 500)
 

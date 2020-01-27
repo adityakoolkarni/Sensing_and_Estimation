@@ -36,15 +36,20 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     size_ftr_vctr = train_data.shape[1] 
     #wghts = np.zeros((1,size_ftr_vctr)) 
     wghts = train_data[0,:].reshape((1,size_ftr_vctr)) / 10000
+    wghts = cv_data[0,:].reshape((1,size_ftr_vctr)) / 10000
     print("Wrights",wghts)
     
     # Gradient Descent Algorithm
     
     good_wghts = wghts
     prev_loss = np.inf
+    print("Shape of CV and Shape of Train", cv_data.shape,train_data.shape)
+    print("Train Data",train_data[0,0:20])
+    print("CV Data",cv_data[0,0:20])
+    time.sleep(10)
     for epoch in tqdm(range(M)):
         #Training 
-        print((train_data @ wghts.T))
+        #print("Input to Logistic Regression",(train_data @ wghts.T).shape)
         #print (((train_label[:,0].reshape(shape_train_data[0],1) - lgst_reg(train_data @ wghts.T))).T)
         grad_sum = ((train_label[:,0].reshape(shape_train_data[0],1) - lgst_reg(train_data @ wghts.T))).T @ train_data
         #print("Sum of errors",grad_sum.shape)
@@ -62,7 +67,7 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
         train_loss_arr = np.where(train_label == 1,np.log(lgst_reg(a)),np.log(1 - lgst_reg(a)))
 
         train_loss = -1*sum(train_loss_arr)
-        print("train loss",train_loss)
+        #print("train loss",train_loss)
             
         train_loss_log[epoch] = train_loss / (shape_train_data[0] * 2) #Average over number of images and number of classes
         
@@ -72,17 +77,17 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
         cv_loss_arr = np.where(cv_label == 1,np.log(lgst_reg(a)),np.log(1 - lgst_reg(a)))
         cv_loss = -1 * sum(cv_loss_arr)
 
-        print("cv loss",cv_loss)
+        #print("cv loss",cv_loss)
             
         cv_loss_log[epoch] = cv_loss / (shape_cv_data[0] * 2) #Average over number of images and number of classes
-        if(cv_loss[0] < prev_loss):
-            print("Weights getting better and the loss is ",cv_loss[0],prev_loss)
+        if(cv_loss < prev_loss):
+            #print("Weights getting better and the loss is ",cv_loss[0],prev_loss)
             prev_loss = cv_loss[0]
             good_wghts = wghts
         else:
-            print("Loss is increasing",cv_loss[0])
+            pass
+            #print("Loss is increasing",cv_loss[0])
         
-        #time.sleep(3)
     #################      Accuracy Calculation ##################
     
     #Reshape the test data
@@ -100,9 +105,14 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     #for test_img in range(shape_test_data[0]):
         #a = test_data[test_img,:] @ good_wghts.T
     a = test_data @ good_wghts.T
+    print("Summed Input to LGST",a)
     pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
-    print(pred_img)
-    pred = sum(pred_img == test_label)
+    print("Summed Input to LGST",pred_img)
+    #print(pred_img)
+    est_img = pred_img.reshape(600,900)
+    plt.imshow(est_img,cmap = 'gray')
+    plt.show()
+    #pred = sum(pred_img == test_label)
         #if(lgst_reg(a) > 0.5):
         #    if(test_label[test_img,0] == 1):
         #        pred_img[
