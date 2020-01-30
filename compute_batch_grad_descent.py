@@ -13,8 +13,10 @@ from tqdm import tqdm
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2
+from draw_contours import draw_bounding_box
 
-def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, test_label, M = 50):
+def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, test_label, path, M = 50):
     '''
     Computes gradient descent using batch gradient descent
     train_data is the image stack of dimension n * 3; n is number of training examples and one value per RGB or HSV
@@ -68,7 +70,7 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
 
         a = train_data @ wghts.T
         z = lgst_reg(a)
-        print("###################### Logistic of Train ######################## ",z)
+        #print("###################### Logistic of Train ######################## ",z)
         train_loss_arr = np.where(train_label == 1,np.log(lgst_reg(a)),np.log(1 - lgst_reg(a)))
 #        print("Train Loss",train_loss_arr)
         #print("Train Loss ", train_loss)
@@ -99,7 +101,7 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     #################      Accuracy Calculation ##################
 
     
-    print("Summed Input to LGST for CV",a)
+    #print("Summed Input to LGST for CV",a)
     plt.plot(np.arange(M),train_loss_log,label='train')
     plt.plot(np.arange(M),cv_loss_log,label='cv')
     plt.legend()
@@ -121,13 +123,15 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     #for test_img in range(shape_test_data[0]):
         #a = test_data[test_img,:] @ good_wghts.T
     a = test_data @ good_wghts.T
-    print("Summed Input to LGST",a)
+    #print("Summed Input to LGST",a)
     pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
     #print("Summed Input to LGST",pred_img)
     #print(pred_img)
-    est_img = pred_img.reshape(450,600)
+    #est_img = pred_img.reshape(450,600)
+    est_img = pred_img.reshape(test_label[0],test_label[1])
     plt.imshow(est_img,cmap = 'gray')
     plt.show()
+
     #pred = sum(pred_img == test_label)
         #if(lgst_reg(a) > 0.5):
         #    if(test_label[test_img,0] == 1):
@@ -138,7 +142,22 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
         #        pred += 1
     
     test_acc = pred / shape_test_data[0]
-
+    est_img_binary = est_img > 0.5
+    np.save('est_img_binary',est_img_binary)
+    print(est_img_binary)
+    est_img_scaled = est_img * 255
+    est_img_scaled.astype(np.uint8)
+    img = cv2.pyrDown(cv2.imread(path, cv2.IMREAD_UNCHANGED))
+    draw_bounding_box(img,est_img_scaled)
+    
+    #contours,_ = cv2.findContours(est_img_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
+    #test_img_raw = cv2.imread(path) / 255
+    #cv2.drawContours(est_img_scaled, contours,-1, (0,255,0), 2)
+    #cv2.imshow("Detected", test_img_raw)
+    #cv2.waitKey(5000)
+    #cv2.destroyAllWindows()
+    #print("contours are ",contours)
 
     
     print("Classification Accuracy is ",test_acc)

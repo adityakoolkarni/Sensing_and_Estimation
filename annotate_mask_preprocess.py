@@ -260,8 +260,6 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
 
 
     ###############################  Old Testing Logic ######################################
-    test_date = None
-    test_label = None
     #for image in range(num_cv_img + num_train_img,num_cv_img + num_train_img + num_test_img):
     #    data_temp = np.load(mask_path_list[image]) / 255
     #    test_date = data_temp if test_date is None else np.vstack((test_date,data_temp)) 
@@ -283,7 +281,49 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
 
 
     ################################ New Testing ##############################
-    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/89.jpg' 
+
+
+    assert cv_data.shape[0] == cv_label.shape[0]
+    #assert test_ftr.shape[0] == test_label.shape[0]
+    return train_data, train_label, cv_data, cv_label
+
+    #for image in range(num_img):
+    #    mask = np.load(mask_path_list[image]) / 255
+    #    plt.imshow(mask)
+    #    plt.show()
+
+
+
+
+if __name__ == '__main__':
+    #py_test()
+    #grab_image_segment(23)
+    np.random.seed(42)
+    #train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(num_train_img=6,num_cv_img=2,num_test_img=1)
+    #np.save('train_data',train_data)
+    #np.save('train_label',train_label)
+    #np.save('cv_data',cv_data)
+    #np.save('cv_label',cv_label)
+    #np.save('test_data',test_data)
+    #np.save('test_label',test_label)
+
+
+
+    train_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_data.npy')
+    train_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_label.npy')
+    cv_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_data.npy')
+    cv_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_label.npy')
+    #test_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_data.npy')
+    #test_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_label.npy')
+
+    print("TTTTTTTTTTTTTTTTT and ", train_data.shape,sum(train_label))
+    print("TTTTTTTTTTTTTTTTT and ", np.where(train_label == 0))
+    print("CV and ", np.where(cv_label == 0))
+
+
+    test_date = None
+    test_label = None
+    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
     test_img_raw = mpimg.imread(path) / 255
     print("TTTTTTTTTTTTTTT",test_img_raw.shape)
     test_ftr = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],10))
@@ -305,44 +345,15 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
 
     #plt.imshow(test_img_raw)
     #plt.show()
+    test_label = test_img_raw.shape
 
-    assert cv_data.shape[0] == cv_label.shape[0]
-    #assert test_ftr.shape[0] == test_label.shape[0]
-    return train_data, train_label, cv_data, cv_label, test_ftr , test_label
-
-    #for image in range(num_img):
-    #    mask = np.load(mask_path_list[image]) / 255
-    #    plt.imshow(mask)
-    #    plt.show()
-
-
-
-
-if __name__ == '__main__':
-    #py_test()
-    #grab_image_segment(23)
-    np.random.seed(42)
-    train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(num_train_img=6,num_cv_img=2,num_test_img=1)
-    np.save('train_data',train_data)
-    np.save('train_label',train_label)
-    np.save('cv_data',cv_data)
-    np.save('cv_label',cv_label)
-    np.save('test_data',test_data)
-    np.save('test_label',test_label)
-
-
-
-    train_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_data.npy')
-    train_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_label.npy')
-    cv_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_data.npy')
-    cv_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_label.npy')
-    test_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_data.npy')
-    test_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_label.npy')
-
-    print("TTTTTTTTTTTTTTTTT and ", train_data.shape,sum(train_label))
-    print("TTTTTTTTTTTTTTTTT and ", np.where(train_label == 0))
-    print("CV and ", np.where(cv_label == 0))
     
-    grad_descent(2e-3, train_data[2281-100:2281+50,:], train_label[2281-100:2281+50,:], cv_data[271-30:271+30,:], cv_label[271-30:271+30], test_data, test_label, M = 1000)
+    #grad_descent(2e-3, train_data[2281-100:2281+50,:], train_label[2281-100:2281+50,:], cv_data[271-30:271+30,:], cv_label[271-30:271+30], test_data, test_label, M = 1000)
+
+    train_strt = 2281-1000
+    train_end =  2281+1000
+    cv_strt = 271-200
+    cv_end = 271+200
+    grad_descent(2e-3, train_data[train_strt:train_end,:], train_label[train_strt:train_end,:], cv_data[cv_strt:cv_end,:], cv_label[cv_strt:cv_end,:], test_ftr, test_label, path,M = 1000)
 
 
