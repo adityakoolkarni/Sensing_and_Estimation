@@ -232,46 +232,51 @@ def separte_red_non_red(mask_path_list,complement_mask_path_list):
     red_data = None
     non_red_data = None
     sanity_cnt = 1
-    #for path in mask_path_list:
-    #    #path = mask_path_list.pop()
-    #    data_temp_mask = np.load(path) / 255
-    #    if(data_temp_mask.shape[0] == 0):
-    #        print("faulty path")
-    #        continue
-    #        #while(data_temp_mask.shape[0] == 0):
-    #        #    continue
-    #            #path = mask_path_list.pop()
-    #            #data_temp_mask = np.load(path) / 255
-    #            #print("Faulty path??",path)
+    for path in mask_path_list:
+        #path = mask_path_list.pop()
+        data_temp_mask = np.load(path) / 255
+        if(data_temp_mask.shape[0] == 0):
+            print("faulty path")
+            continue
+        else:
+            data_temp_mask = rgb_to_hsv(data_temp_mask)
 
-    #    data_temp = data_temp_mask
-    #    ftr = np.zeros((data_temp.shape[0],10))
-    #    ftr[:,0] = np.ones(data_temp.shape[0])
-    #    ftr[:,1] = data_temp[:,0] ** 2                   
-    #    ftr[:,2] = data_temp[:,1] ** 2
-    #    ftr[:,3] = data_temp[:,2] ** 2
-    #    ftr[:,4] = data_temp[:,0] *  data_temp[:,2] 
-    #    ftr[:,5] = data_temp[:,1] *  data_temp[:,2] 
-    #    ftr[:,6] = data_temp[:,1] *  data_temp[:,0] 
-    #    ftr[:,7] = data_temp[:,0]                         
-    #    ftr[:,8] = data_temp[:,1]                         
-    #    ftr[:,9] = data_temp[:,2]  
+            #while(data_temp_mask.shape[0] == 0):
+            #    continue
+                #path = mask_path_list.pop()
+                #data_temp_mask = np.load(path) / 255
+                #print("Faulty path??",path)
 
-    #    red_data = ftr if red_data is None else np.vstack((red_data,ftr)) 
-    #    #print("Train Data Shape",train_data)
-    #    #print("Train Label Concateneated",train_label)
+        data_temp = data_temp_mask
+        ftr = np.zeros((data_temp.shape[0],10))
+        ftr[:,0] = np.ones(data_temp.shape[0])
+        ftr[:,1] = data_temp[:,0] ** 2                   
+        ftr[:,2] = data_temp[:,1] ** 2
+        ftr[:,3] = data_temp[:,2] ** 2
+        ftr[:,4] = data_temp[:,0] *  data_temp[:,2] 
+        ftr[:,5] = data_temp[:,1] *  data_temp[:,2] 
+        ftr[:,6] = data_temp[:,1] *  data_temp[:,0] 
+        ftr[:,7] = data_temp[:,0]                         
+        ftr[:,8] = data_temp[:,1]                         
+        ftr[:,9] = data_temp[:,2]  
 
-    #
-    #np.save('red_data',red_data)
-    #print("Number of Red samples ", red_data.shape[0])
+        red_data = ftr if red_data is None else np.vstack((red_data,ftr)) 
+        #print("Train Data Shape",train_data)
+        #print("Train Label Concateneated",train_label)
 
-    #exit(0)
+    
+    np.save('red_data',red_data)
+    print("Number of Red samples ", red_data.shape[0])
+
+    del red_data
+
 
 
     num_images = 0
     for path in complement_mask_path_list:
         #path = mask_path_list.pop()
         data_temp_mask = np.load(path) / 255
+        data_temp_mask = rgb_to_hsv(data_temp_mask)
         if(data_temp_mask.shape[0] == 0):
             print("faulty path")
             continue
@@ -303,6 +308,27 @@ def separte_red_non_red(mask_path_list,complement_mask_path_list):
 
 
     np.save('non_red_data',non_red_data)
+
+    del non_red_data
+
+from skimage.color import rgb2hsv
+  
+def rgb_to_hsv(data_rgb):
+    '''
+    Converts RGB to HSV 
+    '''
+
+    if(data_rgb.shape[0] % 2):
+        data_temp = data_rgb[:-1,:].reshape(-1,2,3)
+    else:
+        data_temp = data_rgb.reshape(-1,2,3)
+    data_hsv = rgb2hsv(data_temp)
+    data_hsv = data_hsv.reshape(data_temp.shape[0] * data_temp.shape[1],3)
+
+    return data_hsv
+
+
+
 
 #################################################################################
 def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
@@ -399,6 +425,7 @@ if __name__ == '__main__':
     test_label = None
     path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/66.jpg' 
     test_img_raw = mpimg.imread(path) / 255
+    test_img_raw = rgb2hsv(test_img_raw)
     print("TTTTTTTTTTTTTTT",test_img_raw.shape)
     test_ftr = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],10))
     test_img = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],3))
@@ -438,5 +465,5 @@ if __name__ == '__main__':
     cv_data = np.vstack((red_data[num_red_train:num_red_train + num_red_cv],non_red_data[num_red_train: num_red_train+num_red_cv]))
     cv_label = np.vstack((np.ones((num_red_cv,1)),np.zeros((num_red_cv,1))))
 
-    grad_descent(2e-5, train_data, train_label, cv_data, cv_label, test_ftr, test_label, path,M = 1000)
+    grad_descent(4e-5, train_data, train_label, cv_data, cv_label, test_ftr, test_label, path,M = 1000)
 
