@@ -108,7 +108,7 @@ def region_props(image):
     ax.axis((0, 600, 600, 0))
     plt.show()
 
-def shape_detect():
+def shape_detect(bw,path):
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     
@@ -120,18 +120,9 @@ def shape_detect():
     from skimage.color import label2rgb
     import matplotlib.image as mpimg 
     
-    image = data.coins()[50:-50, 50:-50]
     
     # apply threshold
-    thresh = threshold_otsu(image)
-    print(type(thresh))
-    print(thresh)
-    bw = closing(image > thresh, square(3))
-    print(type(bw))
-    print(bw)
 
-    bw = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/est_img_binary.npy')
-    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
     image = mpimg.imread(path)
     # remove artifacts connected to image border
     cleared = clear_border(bw)
@@ -145,9 +136,10 @@ def shape_detect():
     
     for region in regionprops(label_image):
         # take regions with large enough areas
-        if region.area >= 100:
+        if region.area >= 2000:
             # draw rectangle around segmented coins
             minr, minc, maxr, maxc = region.bbox
+            print("BOX Detected!!",minr, minc, maxr, maxc)
             rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                       fill=False, edgecolor='red', linewidth=2)
             ax.add_patch(rect)

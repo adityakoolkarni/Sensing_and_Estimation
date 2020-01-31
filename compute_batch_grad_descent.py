@@ -14,7 +14,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-from draw_contours import draw_bounding_box
+from draw_contours import shape_detect
+import matplotlib.image as mpimg
 
 def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, test_label, path, M = 50):
     '''
@@ -37,7 +38,10 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     shape_test_data = test_data.shape
     size_ftr_vctr = train_data.shape[1] 
     #wghts = np.zeros((1,size_ftr_vctr)) 
-    wghts = train_data[0,:].reshape((1,size_ftr_vctr))
+    #wghts = train_data[0,:].reshape((1,size_ftr_vctr))
+
+    wghts = np.mean(train_data,axis=0).reshape((1,size_ftr_vctr))
+
     #wghts = cv_data[0,:].reshape((1,size_ftr_vctr)) / 10000
     print("Wrights",wghts)
     
@@ -94,9 +98,10 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
             #print("Weights getting better and the loss is ",cv_loss[0],prev_loss)
             prev_loss = cv_loss
             good_wghts = wghts
+            #print("Saving Good Weights and Loss is ",cv_loss)
         else:
+            #print("Loss is increasing",cv_loss)
             pass
-            #print("Loss is increasing",cv_loss[0])
         
     #################      Accuracy Calculation ##################
 
@@ -108,29 +113,33 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     plt.show()
 
 
-    #Reshape the test data
-    #shape_test_data = test_data.shape
-    #resize_test_data = np.zeros((shape_test_data[0],size_ftr_vctr))
+    del train_loss_log
+    del cv_loss_log
+    del train_data
+    del train_label
 
-    #for test_img in range(shape_test_data[0]):
-    #    resize_test_data[test_img,:] = test_data[test_img,:].reshape(size_ftr_vctr)
+    del cv_data
+    del cv_label
 
-    #test_bias_col = np.ones(shape_test_data[0]).reshape(shape_test_data[0],1)
-    #resize_test_data = np.append(test_bias_col,resize_test_data,axis=1)
-    #
     pred = 0
     pred_img = np.zeros((shape_test_data[0],1))
-    #for test_img in range(shape_test_data[0]):
-        #a = test_data[test_img,:] @ good_wghts.T
     a = test_data @ good_wghts.T
     #print("Summed Input to LGST",a)
     pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
     #print("Summed Input to LGST",pred_img)
     #print(pred_img)
-    #est_img = pred_img.reshape(450,600)
+    plt.figure()
+    plt.subplot(2,1,1)
     est_img = pred_img.reshape(test_label[0],test_label[1])
     plt.imshow(est_img,cmap = 'gray')
+
+    plt.subplot(2,1,2)
+    img = mpimg.imread(path)
+    plt.imshow(img)
     plt.show()
+    est_img_scaled = est_img * 255
+    est_img_scaled.astype(np.uint8)
+    shape_detect(est_img_scaled,path)
 
     #pred = sum(pred_img == test_label)
         #if(lgst_reg(a) > 0.5):
@@ -141,14 +150,11 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
         #    if(test_label[test_img,0] == 0):
         #        pred += 1
     
-    test_acc = pred / shape_test_data[0]
-    est_img_binary = est_img > 0.5
-    np.save('est_img_binary',est_img_binary)
-    print(est_img_binary)
-    est_img_scaled = est_img * 255
-    est_img_scaled.astype(np.uint8)
-    img = cv2.pyrDown(cv2.imread(path, cv2.IMREAD_UNCHANGED))
-    draw_bounding_box(img,est_img_scaled)
+    #test_acc = pred / shape_test_data[0]
+    #est_img_binary = est_img > 0.5
+    #np.save('est_img_binary',est_img_binary)
+    #print(est_img_binary)
+    #img = cv2.pyrDown(cv2.imread(path, cv2.IMREAD_UNCHANGED))
     
     #contours,_ = cv2.findContours(est_img_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
@@ -160,8 +166,7 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     #print("contours are ",contours)
 
     
-    print("Classification Accuracy is ",test_acc)
-    return np.array(cv_loss_log),np.array(train_loss_log), test_acc
+    #return np.array(cv_loss_log),np.array(train_loss_log), test_acc
 
 
 def lgst_reg(a):

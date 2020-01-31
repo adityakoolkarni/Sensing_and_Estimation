@@ -196,17 +196,6 @@ def get_data_and_label(mask_path_list,complement_mask_path_list,strt,end):
         assert data_label.shape[0] == data_temp.shape[0]
 
 
-#        shffl_sctch_pd = np.hstack((data_temp,data_label))
-#        #print("BF shuffle",shffl_sctch_pd.shape)
-#        np.random.shuffle(shffl_sctch_pd) 
-#
-#        #print("BF shuffle",shffl_sctch_pd.shape)
-#        data_temp = shffl_sctch_pd[:,0:3].reshape(data_temp.shape)
-#        #print(data_temp.shape)
-#        data_label = shffl_sctch_pd[:,-1].reshape(data_label.shape)
-#        #print(data_label)
-
-
         ftr = np.zeros((data_temp.shape[0],10))
         #print("Current Directory",mask_path_list[image])
         ftr[:,0] = np.ones(data_temp.shape[0])
@@ -233,6 +222,89 @@ def get_data_and_label(mask_path_list,complement_mask_path_list,strt,end):
     assert train_data.shape[0] == train_label.shape[0]
     return train_data,train_label
 
+
+#################################################################################
+def separte_red_non_red(mask_path_list,complement_mask_path_list):
+    '''
+    Takes in RBG vecotrs and computes the feature vectors and returns
+    A matrix of feature vectors and labels from start to end (excluding) image
+    '''
+    red_data = None
+    non_red_data = None
+    sanity_cnt = 1
+    #for path in mask_path_list:
+    #    #path = mask_path_list.pop()
+    #    data_temp_mask = np.load(path) / 255
+    #    if(data_temp_mask.shape[0] == 0):
+    #        print("faulty path")
+    #        continue
+    #        #while(data_temp_mask.shape[0] == 0):
+    #        #    continue
+    #            #path = mask_path_list.pop()
+    #            #data_temp_mask = np.load(path) / 255
+    #            #print("Faulty path??",path)
+
+    #    data_temp = data_temp_mask
+    #    ftr = np.zeros((data_temp.shape[0],10))
+    #    ftr[:,0] = np.ones(data_temp.shape[0])
+    #    ftr[:,1] = data_temp[:,0] ** 2                   
+    #    ftr[:,2] = data_temp[:,1] ** 2
+    #    ftr[:,3] = data_temp[:,2] ** 2
+    #    ftr[:,4] = data_temp[:,0] *  data_temp[:,2] 
+    #    ftr[:,5] = data_temp[:,1] *  data_temp[:,2] 
+    #    ftr[:,6] = data_temp[:,1] *  data_temp[:,0] 
+    #    ftr[:,7] = data_temp[:,0]                         
+    #    ftr[:,8] = data_temp[:,1]                         
+    #    ftr[:,9] = data_temp[:,2]  
+
+    #    red_data = ftr if red_data is None else np.vstack((red_data,ftr)) 
+    #    #print("Train Data Shape",train_data)
+    #    #print("Train Label Concateneated",train_label)
+
+    #
+    #np.save('red_data',red_data)
+    #print("Number of Red samples ", red_data.shape[0])
+
+    #exit(0)
+
+
+    num_images = 0
+    for path in complement_mask_path_list:
+        #path = mask_path_list.pop()
+        data_temp_mask = np.load(path) / 255
+        if(data_temp_mask.shape[0] == 0):
+            print("faulty path")
+            continue
+
+        data_temp = data_temp_mask
+        ftr = np.zeros((data_temp.shape[0],10))
+        ftr[:,0] = np.ones(data_temp.shape[0])
+        ftr[:,1] = data_temp[:,0] ** 2                   
+        ftr[:,2] = data_temp[:,1] ** 2
+        ftr[:,3] = data_temp[:,2] ** 2
+        ftr[:,4] = data_temp[:,0] *  data_temp[:,2] 
+        ftr[:,5] = data_temp[:,1] *  data_temp[:,2] 
+        ftr[:,6] = data_temp[:,1] *  data_temp[:,0] 
+        ftr[:,7] = data_temp[:,0]                         
+        ftr[:,8] = data_temp[:,1]                         
+        ftr[:,9] = data_temp[:,2]  
+
+        non_red_data = ftr if non_red_data is None else np.vstack((non_red_data,ftr)) 
+        #print("Train Data Shape",train_data)
+        if(num_images == 6):
+            break
+        num_images += 1
+    
+
+    print("Number of Non-Red samples ", non_red_data.shape[0])
+
+    if (sanity_cnt == 0) :
+        assert 1 == 2 
+
+
+    np.save('non_red_data',non_red_data)
+
+#################################################################################
 def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
     '''
     Takes in masks and then generates training data set
@@ -252,11 +324,13 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
             if '.npy' in file:
                 complement_mask_path_list.append(os.path.join(r,file))
 
-    print("files",mask_path_list)
-    print("Number of images",num_train_img,num_cv_img,num_test_img)
-    train_data,train_label = get_data_and_label(mask_path_list,complement_mask_path_list,0,num_train_img)
+    #print("files",mask_path_list)
+    #print("Number of images",num_train_img,num_cv_img,num_test_img)
+
+    separte_red_non_red(mask_path_list,complement_mask_path_list)
+    #train_data,train_label = get_data_and_label(mask_path_list,complement_mask_path_list,0,num_train_img)
     
-    cv_data, cv_label = get_data_and_label(mask_path_list,complement_mask_path_list,num_train_img,num_train_img+num_cv_img)
+    #cv_data, cv_label = get_data_and_label(mask_path_list,complement_mask_path_list,num_train_img,num_train_img+num_cv_img)
 
 
     ###############################  Old Testing Logic ######################################
@@ -283,9 +357,9 @@ def preprocess(num_train_img = 1,num_cv_img = 1, num_test_img = 1):
     ################################ New Testing ##############################
 
 
-    assert cv_data.shape[0] == cv_label.shape[0]
-    #assert test_ftr.shape[0] == test_label.shape[0]
-    return train_data, train_label, cv_data, cv_label
+    #assert cv_data.shape[0] == cv_label.shape[0]
+    ##assert test_ftr.shape[0] == test_label.shape[0]
+    #return train_data, train_label, cv_data, cv_label
 
     #for image in range(num_img):
     #    mask = np.load(mask_path_list[image]) / 255
@@ -299,6 +373,7 @@ if __name__ == '__main__':
     #py_test()
     #grab_image_segment(23)
     np.random.seed(42)
+    #preprocess(num_train_img=6,num_cv_img=2,num_test_img=1)
     #train_data, train_label, cv_data, cv_label, test_data, test_label= preprocess(num_train_img=6,num_cv_img=2,num_test_img=1)
     #np.save('train_data',train_data)
     #np.save('train_label',train_label)
@@ -308,22 +383,21 @@ if __name__ == '__main__':
     #np.save('test_label',test_label)
 
 
-
-    train_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_data.npy')
-    train_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_label.npy')
-    cv_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_data.npy')
-    cv_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_label.npy')
+    #train_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_data.npy')
+    #train_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/train_label.npy')
+    #cv_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_data.npy')
+    #cv_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/cv_label.npy')
     #test_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_data.npy')
     #test_label = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/test_label.npy')
 
-    print("TTTTTTTTTTTTTTTTT and ", train_data.shape,sum(train_label))
-    print("TTTTTTTTTTTTTTTTT and ", np.where(train_label == 0))
-    print("CV and ", np.where(cv_label == 0))
+    #print("TTTTTTTTTTTTTTTTT and ", train_data.shape,sum(train_label))
+    #print("TTTTTTTTTTTTTTTTT and ", np.where(train_label == 0))
+    #print("CV and ", np.where(cv_label == 0))
 
 
     test_date = None
     test_label = None
-    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
+    path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/66.jpg' 
     test_img_raw = mpimg.imread(path) / 255
     print("TTTTTTTTTTTTTTT",test_img_raw.shape)
     test_ftr = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],10))
@@ -348,12 +422,21 @@ if __name__ == '__main__':
     test_label = test_img_raw.shape
 
     
-    #grad_descent(2e-3, train_data[2281-100:2281+50,:], train_label[2281-100:2281+50,:], cv_data[271-30:271+30,:], cv_label[271-30:271+30], test_data, test_label, M = 1000)
+    #grad_descent(2e-3, train_data, train_label, cv_data, cv_label, test_ftr, test_label, path, M = 100)
 
-    train_strt = 2281-1000
-    train_end =  2281+1000
-    cv_strt = 271-200
-    cv_end = 271+200
-    grad_descent(2e-3, train_data[train_strt:train_end,:], train_label[train_strt:train_end,:], cv_data[cv_strt:cv_end,:], cv_label[cv_strt:cv_end,:], test_ftr, test_label, path,M = 1000)
+    red_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/red_data.npy')
+    non_red_data = np.load('/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/non_red_data.npy')
+    
 
+    num_red_train = red_data.shape[0] - 5000
+    num_non_red_train = num_red_train
+    num_red_cv = 5000 
+    num_non_red_cv = num_red_cv
+    train_data = np.vstack((red_data[0:num_red_train],non_red_data[0:num_red_train]))
+    train_label = np.vstack((np.ones((num_red_train,1)),np.zeros((num_red_train,1))))
+
+    cv_data = np.vstack((red_data[num_red_train:num_red_train + num_red_cv],non_red_data[num_red_train: num_red_train+num_red_cv]))
+    cv_label = np.vstack((np.ones((num_red_cv,1)),np.zeros((num_red_cv,1))))
+
+    grad_descent(2e-5, train_data, train_label, cv_data, cv_label, test_ftr, test_label, path,M = 1000)
 
