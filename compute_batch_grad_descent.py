@@ -17,7 +17,7 @@ import cv2
 from draw_contours import shape_detect
 import matplotlib.image as mpimg
 
-def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, test_label, path, M = 50):
+def grad_descent(alpha, train_data, train_label, cv_data, cv_label, M = 50):
     '''
     Computes gradient descent using batch gradient descent
     train_data is the image stack of dimension n * 3; n is number of training examples and one value per RGB or HSV
@@ -35,28 +35,21 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
 
     shape_train_data = train_data.shape
     shape_cv_data = train_data.shape
-    shape_test_data = test_data.shape
     size_ftr_vctr = train_data.shape[1] 
-    #wghts = np.zeros((1,size_ftr_vctr)) 
-    #wghts = train_data[0,:].reshape((1,size_ftr_vctr))
+    #wghts = train_data[10,:].reshape((1,size_ftr_vctr))
+    wghts = np.mean(train_data,axis=0).reshape((1,size_ftr_vctr)) + 1e-3
+    wghts[0,0] = 0
+    #wghts = np.zeros((1,size_ftr_vctr))
+    #wghts = np.load('good_wghts_unbalanced.npy')
+    wghts = np.zeros((1,size_ftr_vctr))
 
-    wghts = np.mean(train_data,axis=0).reshape((1,size_ftr_vctr))
-
-    #wghts = cv_data[0,:].reshape((1,size_ftr_vctr)) / 10000
     print("Wrights",wghts)
     
     # Gradient Descent Algorithm
     
     good_wghts = wghts
     prev_loss = np.inf
-    print("CV_:ABEL",cv_label)
-    print("train_:ABEL",train_label)
-    print("Shape of CV and Shape of Train", cv_data.shape,train_data.shape)
-    print("Number of red vs Non Red", sum(train_label),train_data.shape[0]-sum(train_label))
-    print("Number of red vs Non Red", sum(cv_label),cv_data.shape[0]-sum(cv_label))
-    print("Train Data",train_data[0,0:20])
-    print("CV Data",cv_data[0,0:20])
-    print("test Data",test_data[0,0:20])
+
     for epoch in tqdm(range(M)):
         #Training 
         #print("Input to Logistic Regression",(train_data @ wghts.T).shape)
@@ -98,11 +91,13 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
             #print("Weights getting better and the loss is ",cv_loss[0],prev_loss)
             prev_loss = cv_loss
             good_wghts = wghts
-            #print("Saving Good Weights and Loss is ",cv_loss)
+            print("Saving Good Weights and Loss is ",cv_loss_log[epoch], train_loss_log[epoch])
         else:
-            #print("Loss is increasing",cv_loss)
+            print("Loss is increasing",cv_loss_log[epoch], train_loss_log[epoch])
             pass
         
+    #np.save('good_wghts',good_wghts)
+    np.save('good_wghts_unbalanced',good_wghts)
     #################      Accuracy Calculation ##################
 
     
@@ -121,54 +116,6 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, test_data, t
     del cv_data
     del cv_label
 
-    pred = 0
-    pred_img = np.zeros((shape_test_data[0],1))
-    a = test_data @ good_wghts.T
-    #print("Summed Input to LGST",a)
-    pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
-    #print("Summed Input to LGST",pred_img)
-    #print(pred_img)
-    plt.figure()
-    plt.subplot(2,1,1)
-    est_img = pred_img.reshape(test_label[0],test_label[1])
-    plt.imshow(est_img,cmap = 'gray')
-
-    plt.subplot(2,1,2)
-    img = mpimg.imread(path)
-    plt.imshow(img)
-    plt.show()
-    est_img_scaled = est_img * 255
-    est_img_scaled.astype(np.uint8)
-    shape_detect(est_img_scaled,path)
-
-    #pred = sum(pred_img == test_label)
-        #if(lgst_reg(a) > 0.5):
-        #    if(test_label[test_img,0] == 1):
-        #        pred_img[
-        #        pred += 1
-        #else:
-        #    if(test_label[test_img,0] == 0):
-        #        pred += 1
-    
-    #test_acc = pred / shape_test_data[0]
-    #est_img_binary = est_img > 0.5
-    #np.save('est_img_binary',est_img_binary)
-    #print(est_img_binary)
-    #img = cv2.pyrDown(cv2.imread(path, cv2.IMREAD_UNCHANGED))
-    
-    #contours,_ = cv2.findContours(est_img_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/29.jpg' 
-    #test_img_raw = cv2.imread(path) / 255
-    #cv2.drawContours(est_img_scaled, contours,-1, (0,255,0), 2)
-    #cv2.imshow("Detected", test_img_raw)
-    #cv2.waitKey(5000)
-    #cv2.destroyAllWindows()
-    #print("contours are ",contours)
-
-    
-    #return np.array(cv_loss_log),np.array(train_loss_log), test_acc
-
-
 def lgst_reg(a):
     '''
     Computes the logistic activation function
@@ -176,5 +123,4 @@ def lgst_reg(a):
     '''
     import numpy as np
     p_c0 = 1 / (1 + np.exp(-a))
-    #print("LGST",a)
     return p_c0
