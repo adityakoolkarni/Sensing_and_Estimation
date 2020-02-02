@@ -254,7 +254,8 @@ def test_logic(use_rgb,path):
     test_label = test_img_raw.shape
     shape_test_data = test_ftr.shape
 
-    good_wghts = np.load('good_wghts.npy')
+    #good_wghts = np.load('good_wghts.npy')
+    good_wghts = np.load('good_wghts_unbalanced.npy')
     pred = 0
     pred_img = np.zeros((shape_test_data[0],1))
     a = test_ftr @ good_wghts.T
@@ -277,11 +278,11 @@ if __name__ == '__main__':
     #py_test()
     #grab_image_segment(23)
     #exit(0)
-    use_rgb = 0
+    use_rgb = 1
     train = 0
     resave_data = False and (train == 1)
-    alpha = 100e-5
-    M = 500
+    alpha = 20e-5
+    M = 50
     if(resave_data == True):
         preprocess(num_train_img=6,num_cv_img=2,num_test_img=1,use_rgb=use_rgb)
 
