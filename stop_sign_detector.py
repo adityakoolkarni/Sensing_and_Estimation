@@ -27,7 +27,7 @@ class StopSignDetector():
         	e.g., parameters of your classifier
         '''
     
-        self.wghts_balanced = np.load('good_wghts.npy')
+        #self.wghts_balanced = np.load('good_wghts.npy')
         self.wghts_unbalanced = np.load('good_wghts_unbalanced.npy')
         self.y_hght = None
     
@@ -44,10 +44,10 @@ class StopSignDetector():
         '''
         # YOUR CODE HERE
         b,g,r = cv2.split(img)       # get b,g,r
+        #print("Hey")
         rgb_img = cv2.merge([r,g,b])     # switch it to rgb
-        print("Tpy on input",type(rgb_img))
-        bounding_box, mask_img = self.test_logic(rgb_img)
-        return bounding_box, mask_img
+        _, mask_img = self.test_logic(rgb_img)
+        return mask_img
 
     def get_cordinates(self,box_cordinates,img_hght):
         '''
@@ -99,7 +99,7 @@ class StopSignDetector():
             if region.area >= area_threshold:
                 # draw rectangle around segmented coins
                 minr, minc, maxr, maxc = region.bbox
-                print("BOX Detected!!",minr, minc, maxr, maxc)
+                #print("BOX Detected!!",minr, minc, maxr, maxc)
                 rectangle = [minr, minc, maxr, maxc]
                 bounding_boxes.append(self.get_cordinates(rectangle,self.y_hght))
                 rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
@@ -113,7 +113,18 @@ class StopSignDetector():
         return bounding_boxes
 
 
-    
+    def get_bounding_box(self,img):
+        '''
+        Get's the cordinates for the img
+        '''
+        b,g,r = cv2.split(img)       # get b,g,r
+        rgb_img = cv2.merge([r,g,b])     # switch it to rgb
+        _, mask = self.test_logic(rgb_img)
+        #bounding_box = self.shape_detect(self.mask,img)
+        bounding_box =  self.shape_detect(mask,img)
+        print(bounding_box)
+        return bounding_box
+
     def test_logic(self,test_img_raw):
         '''
         This part tests the input images for stop signs
@@ -122,21 +133,20 @@ class StopSignDetector():
         test_label = None
         #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/66.jpg' 
         #test_img_raw = mpimg.imread(path) / 255
-        use_rgb = 0
+        use_rgb = 1
         #test_img_raw[:,0],test_img_raw[:,1],test_img_raw[:,2] = test_img_raw[:,2],test_img_raw[:,1],test_img_raw[:,0] 
         test_img_rgb = test_img_raw
         self.y_hght = test_img_raw.shape[1]
         if(use_rgb == 0):
-            test_img_raw = rgb2hsv(test_img_raw)
+            test_img_raw = rgb2hsv(test_img_raw/255)
         #test_img_raw -= np.mean(test_img_raw,axis=0)
         #test_img_raw  /= np.std(test_img_raw,axis=0)
-        print("TTTTTTTTTTTTTTT",test_img_raw.shape)
+        #print("Testing print")
         test_ftr = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],10))
         test_img = np.zeros((test_img_raw.shape[0] * test_img_raw.shape[1],3))
         test_img[:,0] = test_img_raw[:,:,0].flatten() 
         test_img[:,1] = test_img_raw[:,:,1].flatten() 
         test_img[:,2] = test_img_raw[:,:,2].flatten() 
-        print("#######TEST IMAGE SHAPE",test_img.shape)
         test_ftr[:,0] = np.ones(test_img.shape[0])
         test_ftr[:,1] = test_img[:,0] ** 2                   
         test_ftr[:,2] = test_img[:,1] ** 2
@@ -155,59 +165,62 @@ class StopSignDetector():
     
         pred_img = np.zeros((shape_test_data[0],1))
         a = test_ftr @ self.wghts_unbalanced.T
+        #print(a.shape)
         pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
         plt.figure()
-        plt.subplot(2,2,1)
+        #plt.subplot(2,2,1)
         est_img = pred_img.reshape(test_label[0],test_label[1])
         plt.imshow(est_img,cmap = 'gray')
         best_est_img = est_img
     
-        pred_img = np.zeros((shape_test_data[0],1))
-        a = test_ftr @ self.wghts_balanced.T
-        pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
+        #pred_img = np.zeros((shape_test_data[0],1))
+        #a = test_ftr @ self.wghts_balanced.T
+        #pred_img = np.where(lgst_reg(a) > 0.5, np.ones((shape_test_data[0],1)), np.zeros((shape_test_data[0],1)))
 
-        plt.subplot(2,2,2)
-        est_img = pred_img.reshape(test_label[0],test_label[1])
-        plt.imshow(est_img,cmap = 'gray')
+       # plt.subplot(2,2,2)
+        #est_img = pred_img.reshape(test_label[0],test_label[1])
+        #plt.imshow(est_img,cmap = 'gray')
 
-        plt.subplot(2,2,3)
-        plt.imshow(test_img_rgb)
+        #plt.subplot(2,2,3)
+        #plt.imshow(test_img_rgb)
 
-        plt.subplot(2,2,4)
-        plt.imshow(test_img_rgb)
+        #plt.subplot(2,2,4)
+        #plt.imshow(test_img_rgb)
         plt.show()
 
-        est_img_scaled = best_est_img 
-        est_img_scaled.astype(np.uint8)
-        bounding_boxes = self.shape_detect(est_img_scaled,test_img_rgb)
+        #est_img_scaled = best_est_img 
+        #est_img_scaled.astype(np.uint8)
+        #bounding_boxes = self.shape_detect(est_img_scaled,test_img_rgb)
     
-        return bounding_boxes, est_img
+        return 1, best_est_img
 
 
 if __name__ == '__main__':
    folder = "trainset"
    my_detector = StopSignDetector()
-   #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/5.jpg'
-   #img = cv2.imread(path)
+   #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/trainset/1.jpg'
+   path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/5.jpg'
+   img = cv2.imread(path)
+   img = cv2.pyrDown(img, dstsize=(img.shape[1] // 2, img.shape[0] // 2))
    #bounding_box, mask_img = my_detector.segment_image(img)
    #print("Bounding Bos is ", bounding_box)
 
 
 
-   for filename in os.listdir(folder):
-      # read one test image
-      img = cv2.imread(os.path.join(folder,filename))
-      cv2.imshow('image', img)
-      cv2.waitKey(100)
-      cv2.destroyAllWindows()
-      bounding_box, mask_img = my_detector.segment_image(img)
-      print("Bounding Bos is ", bounding_box)
+   #for filename in os.listdir(folder):
+   #   # read one test image
+   #   img = cv2.imread(os.path.join(folder,filename))
+   #   cv2.imshow('image', img)
+   #   cv2.waitKey(100)
+   #   cv2.destroyAllWindows()
+   #   bounding_box, mask_img = my_detector.segment_image(img)
+   #   print("Bounding Bos is ", bounding_box)
    
    #Display results:
    #(1) Segmented images
-   #	 mask_img = my_detector.segment_image(img)
+   mask_img = my_detector.segment_image(img)
    #(2) Stop sign bounding box
-   #    boxes = my_detector.get_bounding_box(img)
+   boxes = my_detector.get_bounding_box(img)
    #The autograder checks your answers to the functions segment_image() and get_bounding_box()
    #Make sure your code runs as expected on the testset before submitting to Gradescope
 
