@@ -9,12 +9,12 @@
 
 
 
-from tqdm import tqdm
+#from tqdm import tqdm
 import time
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-from draw_contours import shape_detect
+#from draw_contours import shape_detect
 import matplotlib.image as mpimg
 
 def grad_descent(alpha, train_data, train_label, cv_data, cv_label, M = 50):
@@ -50,7 +50,8 @@ def grad_descent(alpha, train_data, train_label, cv_data, cv_label, M = 50):
     good_wghts = wghts
     prev_loss = np.inf
 
-    for epoch in tqdm(range(M)):
+    #for epoch in tqdm(range(M)):
+    for epoch in range(M):
         #Training 
         #print("Input to Logistic Regression",(train_data @ wghts.T).shape)
         #print (((train_label[:,0].reshape(shape_train_data[0],1) - lgst_reg(train_data @ wghts.T))).T)

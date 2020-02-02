@@ -93,14 +93,15 @@ class StopSignDetector():
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.imshow(image_label_overlay)
         bounding_boxes = []
-        
+        area_threshold = image.shape[0] * image.shape[1] * 0.01
         for region in regionprops(label_image):
             # take regions with large enough areas
-            if region.area >= 2000:
+            if region.area >= area_threshold:
                 # draw rectangle around segmented coins
                 minr, minc, maxr, maxc = region.bbox
                 print("BOX Detected!!",minr, minc, maxr, maxc)
-                bounding_boxes.append(get_cordinates(rectangle,self.y_hght))
+                rectangle = [minr, minc, maxr, maxc]
+                bounding_boxes.append(self.get_cordinates(rectangle,self.y_hght))
                 rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                           fill=False, edgecolor='red', linewidth=2)
                 ax.add_patch(rect)
@@ -159,6 +160,7 @@ class StopSignDetector():
         plt.subplot(2,2,1)
         est_img = pred_img.reshape(test_label[0],test_label[1])
         plt.imshow(est_img,cmap = 'gray')
+        best_est_img = est_img
     
         pred_img = np.zeros((shape_test_data[0],1))
         a = test_ftr @ self.wghts_balanced.T
@@ -175,7 +177,7 @@ class StopSignDetector():
         plt.imshow(test_img_rgb)
         plt.show()
 
-        est_img_scaled = est_img * 255
+        est_img_scaled = best_est_img 
         est_img_scaled.astype(np.uint8)
         bounding_boxes = self.shape_detect(est_img_scaled,test_img_rgb)
     
@@ -185,10 +187,10 @@ class StopSignDetector():
 if __name__ == '__main__':
    folder = "trainset"
    my_detector = StopSignDetector()
-   path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/5.jpg'
-   img = cv2.imread(path)
-   bounding_box, mask_img = my_detector.segment_image(img)
-   print("Bounding Bos is ", bounding_box)
+   #path = '/home/aditya/Documents/Course_Work/sensing_and_estimation/HW_1/ECE276A_PR1/hw1_starter_code/5.jpg'
+   #img = cv2.imread(path)
+   #bounding_box, mask_img = my_detector.segment_image(img)
+   #print("Bounding Bos is ", bounding_box)
 
 
 
